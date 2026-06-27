@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { getAssociatedTokenAddress, createTransferInstruction } from '@solana/spl-token'
@@ -9,13 +9,15 @@ import { Input } from './ui/input'
 import { useToast } from './ui/use-toast'
 import { ArrowUpRight, Loader2 } from 'lucide-react'
 
-const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT
-  ? new PublicKey(process.env.NEXT_PUBLIC_USDC_MINT)
-  : null
+function getUsdcMint() {
+  const mint = process.env.NEXT_PUBLIC_USDC_MINT
+  return mint ? new PublicKey(mint) : null
+}
 
-const TREASURY = process.env.NEXT_PUBLIC_TREASURY_PUBKEY
-  ? new PublicKey(process.env.NEXT_PUBLIC_TREASURY_PUBKEY)
-  : null
+function getTreasury() {
+  const treasury = process.env.NEXT_PUBLIC_TREASURY_PUBKEY
+  return treasury ? new PublicKey(treasury) : null
+}
 
 export function TopUpForm() {
   const { publicKey, sendTransaction } = useWallet()
@@ -23,6 +25,9 @@ export function TopUpForm() {
   const { addToast } = useToast()
   const [amount, setAmount] = useState('5')
   const [status, setStatus] = useState<'idle' | 'building' | 'signing' | 'confirming' | 'confirmed' | 'error'>('idle')
+
+  const USDC_MINT = useMemo(() => getUsdcMint(), [])
+  const TREASURY = useMemo(() => getTreasury(), [])
 
   const handleTopUp = async () => {
     if (!publicKey) {
@@ -95,7 +100,6 @@ export function TopUpForm() {
   return (
     <div className="card">
       <h2 className="text-lg font-heading font-semibold mb-4">Top Up Balance</h2>
-
       <div className="flex gap-3 items-end">
         <div className="flex-1">
           <label className="text-text-secondary text-xs mb-1.5 block">Amount (USDC)</label>
@@ -108,20 +112,11 @@ export function TopUpForm() {
             placeholder="5"
           />
         </div>
-        <Button
-          onClick={handleTopUp}
-          disabled={isBusy}
-          className="gap-2"
-        >
-          {isBusy ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <ArrowUpRight size={16} />
-          )}
+        <Button onClick={handleTopUp} disabled={isBusy} className="gap-2">
+          {isBusy ? <Loader2 size={16} className="animate-spin" /> : <ArrowUpRight size={16} />}
           {statusText[status]}
         </Button>
       </div>
-
       <p className="text-text-secondary/60 text-xs mt-3">
         Minimum 1 USDC. Sent directly to treasury. Balance updates within ~10 seconds.
       </p>
