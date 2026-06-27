@@ -1,20 +1,28 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Header } from '@/components/header'
 import { BalanceCard } from '@/components/balance-card'
-import { TopUpForm } from '@/components/top-up-form'
-import { ApiKeyManager } from '@/components/api-key-manager'
 import { UsageHistory } from '@/components/usage-history'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Store, Wallet } from 'lucide-react'
+
+const TopUpForm = dynamic(() => import('@/components/top-up-form').then(m => m.TopUpForm), {
+  ssr: false,
+  loading: () => <div className="card h-48 animate-pulse bg-surface-elevated" />,
+})
+
+const ApiKeyManager = dynamic(() => import('@/components/api-key-manager').then(m => m.ApiKeyManager), {
+  ssr: false,
+  loading: () => <div className="card h-48 animate-pulse bg-surface-elevated" />,
+})
 
 export default function Dashboard() {
   const { connected } = useWallet()
   const { token, loading, error, signIn } = useAuth()
 
-  // Not connected
   if (!connected) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -40,7 +48,6 @@ export default function Dashboard() {
     )
   }
 
-  // Connected but not authenticated
   if (!token) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -71,21 +78,17 @@ export default function Dashboard() {
     )
   }
 
-  // Authenticated dashboard
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-8">
         <div className="space-y-6">
           <BalanceCard />
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <TopUpForm />
             <ApiKeyManager />
           </div>
-
           <UsageHistory />
-
           <div className="card border-dashed border-border/50 bg-surface/50">
             <div className="flex items-start justify-between gap-4">
               <div>
