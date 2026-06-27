@@ -19,6 +19,23 @@ const queryClient = new QueryClient({
   },
 })
 
+// Type workaround for React 18 + Solana wallet adapter type mismatch
+const SolanaConnectionProvider = ConnectionProvider as React.FC<{
+  endpoint: string
+  children: React.ReactNode
+  config?: any
+}>
+
+const SolanaWalletProvider = WalletProvider as React.FC<{
+  wallets: any[]
+  autoConnect?: boolean
+  children: React.ReactNode
+}>
+
+const SolanaWalletModalProvider = WalletModalProvider as React.FC<{
+  children: React.ReactNode
+}>
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const wallets = useMemo(() => [
     new PhantomWalletAdapter(),
@@ -36,15 +53,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ConnectionProvider endpoint={endpoint}>
-        <WalletProvider wallets={wallets} autoConnect>
-          <WalletModalProvider>
+      <SolanaConnectionProvider endpoint={endpoint}>
+        <SolanaWalletProvider wallets={wallets} autoConnect>
+          <SolanaWalletModalProvider>
             <ToastProvider>
               {children}
             </ToastProvider>
-          </WalletModalProvider>
-        </WalletProvider>
-      </ConnectionProvider>
+          </SolanaWalletModalProvider>
+        </SolanaWalletProvider>
+      </SolanaConnectionProvider>
     </QueryClientProvider>
   )
 }
